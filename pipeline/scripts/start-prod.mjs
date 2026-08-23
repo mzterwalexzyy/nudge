@@ -14,14 +14,14 @@ if (sessionSecret.length < 32) {
 }
 
 const dbPath = process.env.DB_PATH?.trim();
-if (!dbPath) throw new Error('DB_PATH must point to durable storage in production.');
+if (!dbPath) throw new Error('DB_PATH must be configured in production.');
 
-const appUrl = process.env.APP_URL || '';
+const appUrl = process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || '';
 try {
   const parsed = new URL(appUrl);
   if (parsed.protocol !== 'https:' || parsed.pathname !== '/' || parsed.search || parsed.hash) throw new Error();
 } catch {
-  throw new Error('APP_URL must be the public HTTPS origin, without a path, query, or hash.');
+  throw new Error('APP_URL or RENDER_EXTERNAL_URL must be the public HTTPS origin, without a path, query, or hash.');
 }
 
 const env = {
@@ -41,11 +41,12 @@ const seedResult = spawnSync(
 if (seedResult.error) throw seedResult.error;
 if (seedResult.status !== 0) process.exit(seedResult.status ?? 1);
 
+const dashboardDir = path.join(rootDir, 'dashboard');
 const nextBin = path.join(rootDir, 'node_modules', 'next', 'dist', 'bin', 'next');
 const server = spawn(
   process.execPath,
-  [nextBin, 'start', path.join(rootDir, 'dashboard'), '-H', '0.0.0.0', '-p', port],
-  { cwd: rootDir, env, stdio: 'inherit' }
+  [nextBin, 'start', '-H', '0.0.0.0', '-p', port],
+  { cwd: dashboardDir, env, stdio: 'inherit' }
 );
 
 for (const signal of ['SIGINT', 'SIGTERM']) {

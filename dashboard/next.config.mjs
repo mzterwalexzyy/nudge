@@ -1,5 +1,7 @@
+import { PHASE_DEVELOPMENT_SERVER } from 'next/constants.js';
+
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const baseConfig = {
   transpilePackages: ['@second-brain/pipeline'],
   // better-sqlite3 is a native module; keep it external to the server bundle.
   experimental: {
@@ -7,4 +9,8 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default (phase) => ({
+  ...baseConfig,
+  // Keep `next dev` from overwriting production artifacts while both run locally.
+  distDir: phase === PHASE_DEVELOPMENT_SERVER ? '.next-dev' : '.next',
+});

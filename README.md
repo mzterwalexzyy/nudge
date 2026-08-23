@@ -24,17 +24,19 @@ An AI intelligence layer for things you save and things you are about to agree t
 | `GROQ_API_KEY` | For Groq | Completion key. Groq has no embedding endpoint, so the app uses its deterministic local embedding fallback. |
 | `GEMINI_API_KEY` | For Gemini | Completion and embedding key when `AI_PROVIDER=gemini`. |
 | `SESSION_SECRET` | Production | Secret of at least 32 characters used to sign 15-minute HttpOnly sessions. |
-| `APP_URL` | Production | Public HTTPS origin used by the same-origin mutation boundary. |
-| `DB_PATH` | Production | SQLite file on durable storage. Development defaults to `pipeline/data/second-brain.db`. |
+| `APP_URL` | Outside Render | Public HTTPS origin used by the same-origin mutation boundary. Render supplies `RENDER_EXTERNAL_URL` automatically. |
+| `DB_PATH` | Production | SQLite path. Render Free uses ephemeral `/tmp/nudge.sqlite`; development defaults to `pipeline/data/second-brain.db`. |
 | `DEMO_SOURCE_ACCOUNT_ID` | Recommended | Reviewed seed account copied into each isolated, temporary Demo profile. |
 | `SECOND_BRAIN_CAPTURE_TOKEN` | Local fallback only | Legacy shared bearer token for local extension development. Hosted users generate per-profile tokens. |
 | `SECOND_BRAIN_ACCOUNT_ID` | Local fallback only | Account scope for local pipeline and legacy-token captures; defaults to `local`. |
 
 Never commit `.env`, API keys, session secrets, capture tokens, or database files.
 
-## Production deployment
+## Render Free demo deployment
 
-`render.yaml` provisions a persistent disk and injects a generated session secret. Confirm that `APP_URL` matches the final Render/custom domain before deploying. `npm run start:prod` refuses to start unless `SESSION_SECRET`, durable `DB_PATH`, and an HTTPS `APP_URL` are configured. It seeds only an empty database, then starts Next on the platform port.
+`render.yaml` deploys a free web service, injects a generated session secret, and stores SQLite at `/tmp/nudge.sqlite`. Render supplies the public HTTPS origin through `RENDER_EXTERNAL_URL`, so the assigned service URL works without a hardcoded hostname. On every fresh instance, NUDGE seeds an empty database before starting Next.
+
+This Free configuration is intended for judging and demo video use only. The filesystem is ephemeral: registered accounts, generated extension credentials, saved links, renamed categories, and demo mutations can disappear whenever Render replaces or redeploys the instance. A fresh **Try the demo** request will recreate an isolated profile from the reviewed seed. Move `DB_PATH` to a persistent disk or external database before onboarding real users.
 
 The landing page provides two explicit paths: **Try the demo** creates a fresh 24-hour isolated profile from the reviewed seed, while **Get started** creates a bcrypt-protected account. Profile reads, dashboard mutations, categories, cleanup, direct Save, and semantic deduplication are scoped to the signed-in profile.
 

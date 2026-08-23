@@ -5,9 +5,9 @@ export const metadata: Metadata = {
   title: 'NUDGE',
   description: 'Capture intelligence passively. Access it when it matters.',
   icons: {
-    icon: [{ url: '/landing/NUDGE.png', type: 'image/png' }],
-    shortcut: '/landing/NUDGE.png',
-    apple: '/landing/NUDGE.png',
+    icon: [{ url: '/landing/nudge-logo.png', type: 'image/png' }],
+    shortcut: '/landing/nudge-logo.png',
+    apple: '/landing/nudge-logo.png',
   },
 };
 

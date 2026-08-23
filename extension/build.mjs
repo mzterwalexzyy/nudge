@@ -4,12 +4,13 @@
  * Zero runtime deps shipped; esbuild is the only devDependency.
  */
 import { build, context } from 'esbuild';
-import { copyFileSync, mkdirSync, existsSync } from 'fs';
+import { copyFileSync, mkdirSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const outdir = path.join(__dirname, 'dist');
+const iconSizes = [16, 32, 48, 128];
 mkdirSync(outdir, { recursive: true });
 
 // Content scripts must be classic (IIFE) scripts, not ESM modules.
@@ -39,6 +40,15 @@ const esmOpts = {
 function copyStatic() {
   copyFileSync(path.join(__dirname, 'manifest.json'), path.join(outdir, 'manifest.json'));
   copyFileSync(path.join(__dirname, 'src', 'popup.html'), path.join(outdir, 'popup.html'));
+
+  const iconOutdir = path.join(outdir, 'icons');
+  mkdirSync(iconOutdir, { recursive: true });
+  for (const size of iconSizes) {
+    copyFileSync(
+      path.join(__dirname, 'public', 'icons', `nudge-${size}.png`),
+      path.join(iconOutdir, `nudge-${size}.png`),
+    );
+  }
 }
 
 const watch = process.argv.includes('--watch');

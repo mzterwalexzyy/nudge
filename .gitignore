@@ -10,6 +10,7 @@ node_modules/
 *.sqlite
 *.sqlite-*
 .next/
+.next-dev/
 out/
 dist/
 .vercel/

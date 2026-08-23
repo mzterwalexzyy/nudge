@@ -85,9 +85,23 @@ export function createDemoProfile(): UserProfile {
       VALUES (${columns.map((column) => `@${column}`).join(', ')})`);
     for (const row of rows) {
       const clone = { ...row, id: idMap.get(String(row.id)), user_id: id } as Record<string, unknown>;
-      clone.parent_id = row.parent_id ? idMap.get(String(row.parent_id)) || null : null;
-      clone.duplicate_of = row.duplicate_of ? idMap.get(String(row.duplicate_of)) || null : null;
+      // Insert every fresh ID before restoring self-references. SQLite checks
+      // parent_id and duplicate_of immediately, regardless of transaction scope.
+      clone.parent_id = null;
+      clone.duplicate_of = null;
       insert.run(clone);
+    }
+
+    const updateRelationships = database.prepare(`UPDATE items
+      SET parent_id = @parent_id, duplicate_of = @duplicate_of
+      WHERE id = @id AND user_id = @user_id`);
+    for (const row of rows) {
+      updateRelationships.run({
+        id: idMap.get(String(row.id)),
+        user_id: id,
+        parent_id: row.parent_id ? idMap.get(String(row.parent_id)) || null : null,
+        duplicate_of: row.duplicate_of ? idMap.get(String(row.duplicate_of)) || null : null,
+      });
     }
 
     const categories = database.prepare('SELECT category_key, name FROM categories WHERE user_id = ?').all(source) as Array<{ category_key: string; name: string }>;

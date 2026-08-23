@@ -765,3 +765,23 @@ h1.page-title { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
   .production-shell .nav-link, .sidebar-profile-link, .production-shell .ext-status, .dashboard-save, .dashboard-icon-button, .dashboard-avatar, .landing-demo-cta, .auth-submit, .mini-card, .category-card, .organized-item-card { transition: none !important; }
   .production-shell .ext-status:hover, .dashboard-save:hover, .dashboard-icon-button:hover, .dashboard-avatar:hover, .landing-demo-cta:hover, .auth-submit:hover, .mini-card:hover, .category-card:hover, .organized-item-card:hover { transform: none !important; }
 }
+
+/* ---------- NUDGE brand asset ---------- */
+.brand-logo {
+  display: block;
+  flex: 0 0 auto;
+  object-fit: contain;
+  transform: scale(1.28);
+  transform-origin: center;
+}
+.landing-brand-mark {
+  width: 32px;
+  height: 32px;
+  overflow: visible;
+  border-radius: 0;
+  color: inherit;
+  background: transparent;
+}
+.landing-brand-mark .brand-logo { width: 32px; height: 32px; }
+.production-shell .brand .brand-logo { width: 30px; height: 30px; }
+.auth-brand .brand-logo { width: 25px; height: 25px; }

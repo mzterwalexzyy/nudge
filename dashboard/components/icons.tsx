@@ -1,11 +1,19 @@
-/** Inline SVG icon set (no external deps, keeps $0 stack). 1.6 stroke, currentColor. */
+/** Local brand mark plus inline SVG icon set (no external dependencies). */
 import React from 'react';
 
 type P = { size?: number };
 const s = (n = 18) => ({ width: n, height: n, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const });
 
 export const IconLogo = ({ size = 24 }: P) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 3 20h18L12 2Z" /></svg>
+  <img
+    className="brand-logo"
+    src="/landing/nudge-logo.png"
+    width={size}
+    height={size}
+    alt=""
+    aria-hidden="true"
+    draggable={false}
+  />
 );
 export const IconTarget = ({ size }: P) => (<svg {...s(size)}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" /></svg>);
 export const IconInbox = ({ size }: P) => (<svg {...s(size)}><path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5.5 5h13l3.5 7v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6l3.5-7Z" /></svg>);

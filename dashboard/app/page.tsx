@@ -11,7 +11,7 @@ export default function LandingPage() {
 
       <nav className="landing-nav" aria-label="Primary navigation">
         <Link className="landing-brand" href="/" aria-label="NUDGE home">
-          <span className="landing-brand-mark"><IconLogo size={18} /></span>
+          <span className="landing-brand-mark"><IconLogo size={28} /></span>
           <span>NUDGE</span>
         </Link>
 
