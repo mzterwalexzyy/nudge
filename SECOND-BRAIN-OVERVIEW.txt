@@ -1,0 +1,370 @@
+=============================================================
+SECOND BRAIN LAYER
+A complete explanation of the project
+=============================================================
+Last updated: 2026-08-22
+
+
+-------------------------------------------------------------
+1. WHAT IT IS, IN ONE LINE
+-------------------------------------------------------------
+An AI layer for the things you save, encounter, and mean to come
+back to. It reads what you keep, understands it, ranks what needs
+attention, resurfaces it in time, and helps you clean up what no
+longer matters.
+
+Not a bookmark manager. Not a Terms & Conditions checker. One
+pipeline pointed at two moments in your digital life.
+
+
+-------------------------------------------------------------
+2. THE PROBLEM
+-------------------------------------------------------------
+Saving information is not the problem. The problem is that saved
+information loses its context and goes dead.
+
+You save something because it mattered at that moment. Three weeks
+later:
+  "Why did I save this?"
+Or worse:
+  "The hackathon ended yesterday."
+
+Your digital life is a giant "I'll deal with this later" graveyard:
+X posts, articles, hackathons, GitHub repos, videos, job posts,
+events, deadlines, tools, random ideas. And separately, you agree
+to things (Terms of Service, privacy policies, subscriptions)
+without ever knowing which parts actually affect you.
+
+Nobody fails to read Terms because they physically can't. They fail
+because nobody tells them which parts matter to them.
+
+
+-------------------------------------------------------------
+3. THE CORE IDEA (THE UNIFYING CONCEPT)
+-------------------------------------------------------------
+One pipeline:
+
+  detect page
+    -> extract entities / dates / commitments
+    -> classify
+    -> assign an attention level
+    -> store
+    -> resurface at the right time
+
+Three parts working together:
+  - A SENSOR (the browser extension) that captures what you save
+    and notices what you're about to agree to.
+  - An INTERPRETER (the AI pipeline) that pulls out what actually
+    matters.
+  - A MEMORY (the dashboard) that resurfaces it when it counts.
+
+That shared spine is what makes this ONE product instead of two
+features glued together.
+
+
+-------------------------------------------------------------
+4. THE TWO MODES
+-------------------------------------------------------------
+MODE A (PRIMARY) — SAVE & REMEMBER
+  For things you intentionally save.
+  Collects -> Categorizes -> Summarizes -> Extracts dates ->
+  Tracks relevance -> Reminds you.
+
+  Example dashboard state:
+    You saved 247 things. The AI tells you:
+      - 3 deadlines approaching
+      - 5 opportunities expired
+      - 12 items you never revisited
+      - 8 useful resources tied to projects you're working on
+
+MODE B (SECONDARY) — READ BEFORE YOU AGREE
+  For things you're encountering right now.
+  Detects -> Reads -> Identifies commitments -> Flags important
+  clauses -> Explains them in plain language.
+
+  Example, on a Terms of Service page, a quiet badge appears:
+    "We've analyzed this agreement. 3 things worth knowing."
+  Click it:
+    HIGH ATTENTION  Automatic renewal — subscription renews unless
+                    cancelled before the renewal date.
+    WORTH REVIEWING Data sharing — may share some info with third
+                    parties.
+    STANDARD        Account deletion — you can request deletion.
+
+  Tone rule: measured, never alarmist. Not "THIS COMPANY IS EVIL."
+  Attention levels: low / review / important / high, each with a
+  plain-language reason.
+
+
+-------------------------------------------------------------
+5. HOW BOOKMARKS ACTUALLY GET IN (INGESTION)
+-------------------------------------------------------------
+This is the part that decides whether it's free or not. The AI
+sorting is trivial once an item is in. Getting items in is the
+real question.
+
+PRIMARY, FREE — THE NATIVE-BOOKMARK LISTENER (the smart move)
+  Modeled on how the Ethos extension injects itself into X.
+  The extension watches for when the user clicks X's OWN bookmark
+  button on a tweet. No second "save for later" button is added.
+  At click time, the content already on screen is captured from the
+  page DOM: tweet URL, author, text, timestamp, media, and any
+  links inside the tweet. That gets sent to the user's dashboard
+  and run through the pipeline.
+
+  Why this is better than syncing X bookmarks:
+    - No X API tier needed. Content is captured at click, on screen.
+    - It's a user-initiated save, not bulk scraping.
+    - You get the content immediately, no re-fetch.
+
+  Two layers of content per save:
+    - The tweet itself (text is already in the DOM).
+    - Any link inside the tweet — fetched server-side and classified
+      too, because that's often where the real deadline lives
+      (a hackathon page, an article, a repo).
+
+OTHER FREE SOURCES
+  - "Save this page" from any site.
+  - Paste a URL.
+  - Import browser bookmarks (chrome.bookmarks).
+
+RETROACTIVE SCAN OF OLD X BOOKMARKS — PREMIUM / UPGRADE, LATER
+  Scanning bookmarks you saved in the past is a different, harder
+  job because that content isn't on screen. Two paths:
+    - Free workaround: when the user opens their own X bookmarks
+      page, the extension scrolls and reads each one from the DOM as
+      a one-time backfill. Works, but it's fragile and gray-area,
+      and only catches what loads while scrolling.
+    - Clean but paid: the official X bookmarks API, which needs a
+      paid X tier (roughly $100–$200/month).
+  Decision: this is tagged as a premium/upgrade feature, not part of
+  the free core.
+
+HONEST LIMITATION
+  X changes its page markup often, so DOM-based capture (like every
+  extension in this space, Ethos included) can break and need
+  patching. Some linked pages (paywalls, bot blocks) won't resolve;
+  in that case the tweet text is saved anyway.
+
+
+-------------------------------------------------------------
+6. THE FEATURES
+-------------------------------------------------------------
+CATEGORY SORTING
+  Each item is classified into a kind: opportunity, article, tool,
+  repo, video, agreement, idea, entertainment, or collection (a
+  list). Category first.
+
+URGENCY / ATTENTION
+  A deadline is extracted where one exists. Attention is derived
+  from how close the deadline is and whether action is required:
+    high (<= ~2 days), important (<= ~7 days), review, low.
+  Colors: green (low), yellow (review), orange (important),
+  red (high).
+
+SUMMARY + HIGHLIGHTS
+  Every item gets a one-line summary AND a short list of 3–5
+  key highlights / takeaways:
+    - Article: the actual key points.
+    - Hackathon/opportunity: prize, stack, deadline, eligibility.
+  Never padded. If there are fewer than 3 real points, it returns
+  fewer. It never invents highlights.
+
+LIST FAN-OUT (parent / children)
+  If a saved post is a list of many things — e.g. a tweet linking
+  to "Top 15 hackathons this month" — it is not saved as one blob.
+    - The original becomes a PARENT item (kind: collection) with a
+      summary of the whole list.
+    - Each entry becomes a CHILD item (parent_id -> parent) that is
+      classified and dated on its own, so all 15 deadlines are
+      tracked independently in Needs Attention.
+    - Children show "from: <parent title>" so their source is clear.
+  This is the difference between a bookmark tool and an intelligence
+  layer: save one post, get many tracked deadlines.
+
+DATE HONESTY (date_confidence)
+  Every dated item carries date_confidence: explicit / inferred /
+  none. If an entry has no clearly stated deadline, deadline = null
+  and confidence = none. It NEVER invents or guesses a date. Only
+  explicit dates drive "high" attention, and the UI visually marks
+  uncertain or missing dates so the user never trusts a guess.
+  A fabricated "closes in 2 days" is worse than a blank, because it
+  burns trust once and gets the product deleted.
+
+SANITIZE (cleanup center)
+  Five buckets, each with a count:
+    - Expired: hackathons/events whose deadlines passed.
+    - Unattended: saved 6+ months ago, never reopened.
+    - Duplicates: same thing saved twice (found via embeddings).
+    - Dead links: pages that no longer exist.
+    - Possibly stale: link still works but info is outdated
+      ("Best AI tools in 2024").
+  One "Run Smart Cleanup" button PROPOSES actions per bucket. The
+  user confirms each group. NOTHING is ever auto-deleted. That
+  confirm step is a trust feature, not a nicety.
+
+
+-------------------------------------------------------------
+7. THE DASHBOARD (THE MEMORY)
+-------------------------------------------------------------
+Views:
+  NEEDS ATTENTION (the hero screen)
+    High/important items, sorted by nearest deadline, each with a
+    countdown and how long ago it was saved. This is where the
+    product earns its keep.
+  INBOX
+    Recently saved, not yet organized.
+  ORGANIZED
+    Grouped by kind. Collections show a count of their children.
+  SANITIZE
+    The cleanup center above.
+
+Design principle: an attention-ranked feed, not a folder tree.
+Calm, inbox-style, trustworthy. Uncertain dates look different from
+confirmed ones.
+
+
+-------------------------------------------------------------
+8. THE TECH STACK (ALL FREE TIERS, $0)
+-------------------------------------------------------------
+  AI model      : Groq + Llama (free) as the default, provider
+                  adapter so Google Gemini Flash (free) can swap in
+                  with no other code change.
+  Embeddings    : for dedup and "related to your projects"
+                  (Gemini embeddings free tier, or a local model).
+  Database      : Supabase free (Postgres + pgvector); SQLite is the
+                  local dev fallback (currently in use).
+  Dashboard     : Next.js, deploy on Vercel free.
+  Extension     : Manifest V3, TypeScript. Runs unpacked for free.
+                  Chrome Web Store listing is a one-time $5 only if
+                  publicly listed — not needed for a demo.
+  Fetch/liveness/
+  dedup         : your own code, no paid service.
+
+The only thing money buys is scale and the retroactive X-bookmarks
+API. The working, demoable product is genuinely $0.
+
+
+-------------------------------------------------------------
+9. THE DATA MODEL (ONE TABLE, BOTH MODES)
+-------------------------------------------------------------
+item:
+  id, url, title, raw_text (truncated to a safe token budget)
+  source        : x_bookmark | save_button | paste | agreement |
+                  bookmark_backfill
+  kind          : null until classified, then one of
+                  opportunity | article | tool | repo | video |
+                  agreement | idea | entertainment | collection
+  summary
+  highlights    : array of strings (3–5 key takeaways)
+  why_saved
+  deadline      : nullable ISO date
+  date_confidence: explicit | inferred | none
+  action_required: bool
+  attention     : low | review | important | high
+  status        : inbox | organized | expired | stale | duplicate |
+                  dead
+  embedding     : vector (for dedup + similarity)
+  parent_id     : nullable item id (list fan-out)
+  duplicate_of  : nullable item id
+  created_at, last_seen_at, last_opened_at
+  clauses       : jsonb, agreements only, array of
+                  {label, level, plain_explanation}
+
+
+-------------------------------------------------------------
+10. THE PIPELINE FUNCTIONS
+-------------------------------------------------------------
+  ingest(url)            : fetch page, extract readable text.
+  detectMultiplicity(text, links)
+                         : single item, or a list of many? Runs
+                           before classify. Drives the parent/child
+                           fan-out. Falls back to "single article"
+                           if unsure, never breaks.
+  classify(text)         : one model call -> kind, summary,
+                           highlights, why_saved (strict JSON).
+  extractDates(text,kind): deadline + action_required +
+                           date_confidence. Never invents a date.
+  assignAttention(item,now): attention from deadline proximity.
+  classifyAgreement(text): clauses[] {label, level,
+                           plain_explanation} for Mode B.
+  embed(text)            : vector for dedup/similarity.
+  findDuplicates(item, existing): cosine similarity -> duplicate_of.
+  checkLiveness(url)     : mark dead links.
+
+Rule that governs all of them: build the brain before the skin.
+Prove the pipeline on real URLs before any UI exists.
+
+
+-------------------------------------------------------------
+11. THE BUILD PLAN (PHASES)
+-------------------------------------------------------------
+Phase 0  Foundation: repo, DB, provider adapter, secrets. Verified
+         by a real model call and a real insert/read-back.
+Phase 1  The pipeline, no UI. All functions above. Verified by a CLI
+         over 10 real URLs (hackathons, articles, a repo, a video,
+         a tools page, a real ToS page) showing correct real output.
+Phase 2  The agreement analyzer. Verified on a real ToS page with
+         3–5 correctly ranked clauses.
+Phase 3  The dashboard: Needs Attention, Inbox, Organized, Sanitize.
+Phase 4  The extension: the native-bookmark listener (watch X's own
+         bookmark click), the linked-page fetch, and the ToS badge.
+Phase 5  End to end: import, save a near-deadline hackathon, see it
+         red, open a ToS page, run Sanitize, confirm cleanup.
+Phase 6  UI polish, last. Presentation only, no behavior change.
+
+Two later amendments:
+  Amendment 1  Native-bookmark ingestion + premium backfill.
+  Amendment 2  Highlights + list fan-out + date_confidence.
+
+Each phase must be verified with real output before the next.
+Nothing is marked done that wasn't verified. No fabricated dates,
+summaries, highlights, or children to make a check pass.
+
+
+-------------------------------------------------------------
+12. HONEST LIMITATIONS (STATE THESE OPENLY)
+-------------------------------------------------------------
+  - X markup changes will occasionally break DOM capture; needs
+    patching. Same fragility every extension in this space has.
+  - Retroactive sync of a user's existing X bookmarks is not free.
+    The free version is a fragile DOM-scroll backfill; the clean
+    version needs the paid X API. It's a premium/upgrade feature.
+  - Some linked pages won't resolve (paywalls, bot blocks). The
+    tweet text is saved anyway.
+  - Date extraction can be uncertain on messy lists. That's exactly
+    why date_confidence exists: an uncertain date is shown as
+    uncertain, never as a confident guess.
+  - The AI-dependent steps only work with a model key present. With
+    no key, the pipeline is real but unverified — those steps are
+    marked NOT VERIFIED rather than faked.
+
+
+-------------------------------------------------------------
+13. PRODUCT PHILOSOPHY / PITCH LINES
+-------------------------------------------------------------
+  "Your bookmarks shouldn't become a graveyard."
+  "Save now. Know what matters later."
+  "Don't just save it. Let it work for you."
+  "Understand what you save. Understand what you agree to."
+
+Full pitch:
+  An AI-powered browser companion that turns forgotten bookmarks and
+  unread digital commitments into an organized, time-aware system —
+  automatically categorizing what you save, surfacing deadlines,
+  highlighting what matters, flagging what needs attention, and
+  helping you safely clean up what no longer does.
+
+
+-------------------------------------------------------------
+14. WHY IT'S STRONG FOR A HACKATHON
+-------------------------------------------------------------
+It demonstrates a real agent workflow, not just "prompt in, answer
+out." A full loop: ingest -> understand -> classify -> extract
+dates -> decide if action is needed -> monitor time-sensitive items
+-> notify -> re-evaluate relevance. And it solves a pain the builder
+personally has, which shows in the demo.
+
+=============================================================
+END
+=============================================================

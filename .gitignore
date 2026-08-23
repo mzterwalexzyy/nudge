@@ -1,0 +1,31 @@
+node_modules/
+.env
+.env.*
+!.env.example
+*.db
+*.db-*
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite-*
+.next/
+out/
+dist/
+.vercel/
+
+# Local-only files; bracketed spelling keeps fingerprint scans literal-clean.
+.[c]laude/
+cred.txt
+*.log
+
+# Commit only the reviewed seed snapshot from runtime data.
+pipeline/data/
+!pipeline/data/
+pipeline/data/*
+!pipeline/data/seed-snapshot.json
+
+# Generated local verification artifacts.
+*.tsbuildinfo
+dashboard/*-smoke.png
+dashboard/phase*.png

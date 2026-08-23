@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "NUDGE",
+  "version": "0.1.0",
+  "description": "Mirrors your native X bookmarks into NUDGE and flags agreements worth reading.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": [
+    "https://x.com/*",
+    "https://twitter.com/*",
+    "http://localhost:3005/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "NUDGE",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://x.com/*", "https://twitter.com/*"],
+      "js": ["x-bookmark-listener.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "exclude_matches": ["https://x.com/*", "https://twitter.com/*"],
+      "js": ["agreement-detector.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

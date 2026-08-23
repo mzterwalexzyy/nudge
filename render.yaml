@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: second-brain
+    env: node
+    plan: starter
+    buildCommand: npm ci && npm run build --workspace=@second-brain/dashboard
+    startCommand: npm run start:prod
+    healthCheckPath: /
+    disk:
+      name: nudge-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: AI_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: APP_URL
+        value: https://second-brain.onrender.com
+      - key: DB_PATH
+        value: /var/data/nudge.sqlite
+      - key: DEMO_SOURCE_ACCOUNT_ID
+        value: local
+      - key: NODE_VERSION
+        value: 22.14.0

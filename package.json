@@ -1,0 +1,28 @@
+{
+  "name": "second-brain",
+  "version": "0.1.0",
+  "private": true,
+  "author": "NUDGE",
+  "description": "AI intelligence layer for bookmarks and agreement analysis",
+  "workspaces": [
+    "pipeline",
+    "dashboard",
+    "extension"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=@second-brain/dashboard",
+    "start:prod": "node pipeline/scripts/start-prod.mjs",
+    "seed:export": "node pipeline/scripts/export-seed.mjs",
+    "seed:boot": "node pipeline/scripts/boot-seed.mjs",
+    "verify:ai": "node pipeline/scripts/verify-ai.mjs",
+    "verify:db": "node pipeline/scripts/verify-db.mjs",
+    "verify:migrations": "node pipeline/scripts/verify-migrations.mjs",
+    "verify:extension": "npm run verify --workspace=@second-brain/extension",
+    "verify:phase5": "npm run verify --workspace=@second-brain/dashboard",
+    "verify:local": "npm run verify:migrations && npm run verify:extension && npm run verify:phase5",
+    "pipeline": "node pipeline/scripts/run-pipeline.mjs"
+  },
+  "dependencies": {
+    "cssstyle": "^6.2.0"
+  }
+}

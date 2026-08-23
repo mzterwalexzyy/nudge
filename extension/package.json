@@ -1,0 +1,17 @@
+{
+  "name": "@second-brain/extension",
+  "version": "0.1.0",
+  "private": true,
+  "author": "NUDGE",
+  "description": "NUDGE Chrome extension - native X bookmark listener + agreement detection",
+  "scripts": {
+    "build": "node build.mjs",
+    "verify": "npm run build && node scripts/verify-extension.mjs",
+    "watch": "node build.mjs --watch"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.0.278",
+    "esbuild": "0.24.0",
+    "jsdom": "25.0.1"
+  }
+}

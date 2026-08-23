@@ -1,0 +1,19 @@
+# Phase 1 verification set (10 real URLs). Today's anchor: 2026-08-22
+# 2 hackathons with real deadlines
+https://agentsforhumans.devpost.com/rules
+https://lake-oswego-hacks.devpost.com/rules
+# 2 articles
+https://overreacted.io/a-complete-guide-to-useeffect/
+https://jvns.ca/blog/2016/06/30/why-do-we-use-the-linux-kernels-tcp-stack/
+# 1 GitHub repo
+https://github.com/mozilla/readability
+# 1 video
+https://www.youtube.com/watch?v=8aGhZQkoFbQ
+# 1 tools page
+https://vercel.com/
+# 1 real Terms-of-Service page
+https://policies.google.com/terms
+# 1 event page
+https://events.google.com/io/
+# 1 additional real documentation page (completes the required 10 URL set)
+https://developer.mozilla.org/en-US/docs/Web/JavaScript

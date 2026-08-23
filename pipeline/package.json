@@ -1,0 +1,21 @@
+{
+  "name": "@second-brain/pipeline",
+  "version": "0.1.0",
+  "private": true,
+  "author": "NUDGE",
+  "type": "module",
+  "main": "src/index.mjs",
+  "scripts": {
+    "verify:ai": "node scripts/verify-ai.mjs",
+    "verify:db": "node scripts/verify-db.mjs",
+    "run-pipeline": "node scripts/run-pipeline.mjs"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "better-sqlite3": "^11.7.0",
+    "dotenv": "^16.4.7",
+    "@mozilla/readability": "^0.5.0",
+    "jsdom": "^25.0.1",
+    "groq-sdk": "^0.8.0"
+  }
+}
