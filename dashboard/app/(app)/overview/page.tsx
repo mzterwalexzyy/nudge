@@ -8,7 +8,7 @@ import { agoLabel } from '@/lib/ui';
 
 export const dynamic = 'force-dynamic';
 
-export default function NeedsAttentionPage() {
+export default function OverviewPage() {
   let items: Item[] = [];
   let stats = { deadlinesApproaching: 0, needReview: 0, recentlySaved: 0, totalItems: 0 };
   let recent: Item[] = [];

@@ -23,7 +23,7 @@ export default function AuthForm({ mode }: { mode: 'signup' | 'login' }) {
       });
       const result = await response.json();
       if (!response.ok || !result.ok) throw new Error(result.error || 'Please try again.');
-      window.location.assign(result.redirect || '/needs-attention');
+      window.location.assign(result.redirect || '/overview');
     } catch (caught: any) {
       setError(caught.message);
       setBusy(false);

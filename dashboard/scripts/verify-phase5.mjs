@@ -114,12 +114,20 @@ try {
   assert.match(landingHtml, /Try the demo/);
   assert.match(landingHtml, /Get started/);
 
-  const demoAResponse = await fetch(`${base}/api/auth/demo`, { method: 'POST', redirect: 'manual', headers: { origin: base } });
+  const demoAResponse = await fetch(`http://localhost:${port}/api/auth/demo`, { method: 'POST', redirect: 'manual', headers: { origin: base } });
   const demoBResponse = await fetch(`${base}/api/auth/demo`, { method: 'POST', redirect: 'manual', headers: { origin: base } });
   assert.equal(demoAResponse.status, 303);
   assert.equal(demoBResponse.status, 303);
+  assert.equal(demoAResponse.headers.get('location'), `${base}/overview`);
+  assert.equal(demoBResponse.headers.get('location'), `${base}/overview`);
   const demoACookie = cookieFrom(demoAResponse);
   const demoBCookie = cookieFrom(demoBResponse);
+  const legacyOverview = await fetch(`${base}/needs-attention`, {
+    redirect: 'manual',
+    headers: { cookie: demoACookie },
+  });
+  assert.equal(legacyOverview.status, 308);
+  assert.equal(legacyOverview.headers.get('location'), '/overview');
 
   let check = new Database(dbPath);
   const demos = check.prepare("SELECT id FROM users WHERE account_type = 'demo' ORDER BY created_at, id").all();
@@ -137,21 +145,29 @@ try {
   assert.equal(crossProfileRelations, 0, 'demo relationships must stay inside their profile');
   check.close();
 
-  assert.equal((await fetch(`${base}/needs-attention`, { headers: { cookie: demoACookie } })).status, 200);
-  assert.equal((await fetch(`${base}/needs-attention`, { headers: { cookie: demoBCookie } })).status, 200);
+  assert.equal((await fetch(`${base}/overview`, { headers: { cookie: demoACookie } })).status, 200);
+  assert.equal((await fetch(`${base}/overview`, { headers: { cookie: demoBCookie } })).status, 200);
 
   const email = 'phase5@example.com';
+  const password = 'production-contract-password';
   const registration = await postJson('/api/auth/register', {
     displayName: 'Phase Five',
     email,
-    password: 'production-contract-password',
+    password,
   });
-  assert.equal(registration.status, 201, await registration.text());
+  const registrationText = await registration.text();
+  assert.equal(registration.status, 201, registrationText);
+  const registrationResult = JSON.parse(registrationText);
+  assert.equal(registrationResult.redirect, '/overview');
   const setCookie = registration.headers.get('set-cookie') || '';
   assert.match(setCookie, /HttpOnly/i);
   assert.match(setCookie, /SameSite=Lax/i);
   assert.match(setCookie, /Max-Age=900/i);
   const userCookie = cookieFrom(registration);
+
+  const login = await postJson('/api/auth/login', { email, password });
+  assert.equal(login.status, 200, await login.clone().text());
+  assert.equal((await login.json()).redirect, '/overview');
 
   check = new Database(dbPath);
   const user = check.prepare('SELECT id, password_hash FROM users WHERE email = ?').get(email);
@@ -159,7 +175,7 @@ try {
   check.prepare('UPDATE items SET user_id = ? WHERE user_id = ?').run(user.id, account);
   check.close();
 
-  const routes = ['/', '/needs-attention', '/inbox', '/organized', '/sanitize', '/agreements', '/profile'];
+  const routes = ['/', '/overview', '/inbox', '/organized', '/sanitize', '/agreements', '/profile'];
   const routeStatuses = {};
   for (const route of routes) {
     const response = await fetch(base + route, { headers: { cookie: userCookie } });
@@ -167,7 +183,7 @@ try {
     assert.equal(response.status, 200, `${route} must render`);
   }
 
-  const attentionHtml = await (await fetch(`${base}/needs-attention`, { headers: { cookie: userCookie } })).text();
+  const attentionHtml = await (await fetch(`${base}/overview`, { headers: { cookie: userCookie } })).text();
   assert.match(attentionHtml, /\[TEST\] Needs review item/);
   assert.match(attentionHtml, /\[TEST\] Approaching deadline/);
 
@@ -180,6 +196,20 @@ try {
   assert.equal(unauthenticatedCleanup.status, 401, 'cleanup requires a session');
   const crossOriginCleanup = await postCleanup({ ids: ['phase5-duplicate'], bucket: 'duplicates', confirmed: true }, userCookie, 'https://attacker.example');
   assert.equal(crossOriginCleanup.status, 403, 'cleanup rejects cross-origin requests');
+  const schemeMismatchCleanup = await postCleanup(
+    { ids: ['phase5-duplicate'], bucket: 'duplicates', confirmed: true },
+    userCookie,
+    `https://127.0.0.1:${port}`,
+  );
+  assert.equal(schemeMismatchCleanup.status, 403, 'cleanup compares the complete origin, including scheme');
+
+  const logout = await fetch(`${base}/api/auth/logout`, {
+    method: 'POST',
+    redirect: 'manual',
+    headers: { origin: base, cookie: userCookie },
+  });
+  assert.equal(logout.status, 303);
+  assert.equal(logout.headers.get('location'), `${base}/`);
 
   const renamed = await postJson('/api/categories', { action: 'rename', categoryKey: 'article', name: 'Research Library' }, userCookie);
   assert.equal(renamed.status, 200, await renamed.text());

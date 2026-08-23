@@ -16,7 +16,7 @@ These checks require a real Chrome profile logged into X. Automated DOM/API evid
 1. Open a real X post linking to a hackathon whose page clearly states a current deadline.
 2. Click X's own control with `data-testid="bookmark"`; click no NUDGE save control (none is injected).
 3. In the service-worker Network panel, verify one `POST /api/ingest` returns 200.
-4. Open `/needs-attention` and verify the real title, model summary, explicit countdown, and attention color. The deadline must be supported by tweet or linked-page text.
+4. Open `/overview` and verify the real title, model summary, explicit countdown, and attention color. The deadline must be supported by tweet or linked-page text.
 5. Capture screenshots of the X post/bookmark state and dashboard row. Record the request time and resulting item id.
 
 ## B — plain non-deadline post

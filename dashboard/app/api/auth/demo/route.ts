@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { assertSessionConfiguration, requestIsSameOrigin, setSession } from '@/lib/auth';
+import { applicationRedirectUrl, assertSessionConfiguration, requestIsSameOrigin, setSession } from '@/lib/auth';
 import { createDemoProfile } from '@/lib/users';
 
 export async function POST(request: NextRequest) {
@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     assertSessionConfiguration();
     const user = createDemoProfile();
     setSession({ sub: user.id, name: user.display_name, email: null, type: 'demo' });
-    return NextResponse.redirect(new URL('/needs-attention', request.url), 303);
+    return NextResponse.redirect(applicationRedirectUrl(request, '/overview'), 303);
   } catch {
     return NextResponse.json({ error: 'Demo profile could not be created.' }, { status: 500 });
   }

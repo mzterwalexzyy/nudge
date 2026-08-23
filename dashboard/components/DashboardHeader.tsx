@@ -61,7 +61,7 @@ export default function DashboardHeader({
           <button className="dashboard-save" type="button" onClick={() => setSaveOpen(true)}>
             <IconPlus size={17} /> Save
           </button>
-          <Link className="dashboard-icon-button" href="/needs-attention" aria-label={`${notificationCount} items need attention`}>
+          <Link className="dashboard-icon-button" href="/overview" aria-label={`${notificationCount} items need attention`}>
             <IconBell size={18} />
             {notificationCount > 0 && <span>{Math.min(notificationCount, 99)}</span>}
           </Link>

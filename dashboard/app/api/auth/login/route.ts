@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
     clearLoginFailures(key);
     setSession({ sub: user.id, name: user.display_name, email: user.email, type: 'user' });
-    return NextResponse.json({ ok: true, redirect: '/needs-attention' });
+    return NextResponse.json({ ok: true, redirect: '/overview' });
   } catch {
     return NextResponse.json({ error: 'Could not sign in.' }, { status: 500 });
   }

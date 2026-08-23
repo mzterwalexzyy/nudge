@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     assertSessionConfiguration();
     const user = createRegisteredUser({ email, displayName, passwordHash: await hash(password, 12) });
     setSession({ sub: user.id, name: user.display_name, email: user.email, type: 'user' });
-    return NextResponse.json({ ok: true, redirect: '/needs-attention' }, { status: 201 });
+    return NextResponse.json({ ok: true, redirect: '/overview' }, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Could not create the account.' }, { status: 500 });
   }

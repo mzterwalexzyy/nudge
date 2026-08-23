@@ -90,13 +90,42 @@ export function clearSession() {
   });
 }
 
+const LOOPBACK_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
+export type ApplicationRedirectPath = '/' | '/overview';
+
+export function applicationOrigin(request: Request): string {
+  const configured = (process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || '').trim();
+  if (!configured) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('APP_URL or RENDER_EXTERNAL_URL must be configured in production.');
+    }
+    return new URL(request.url).origin;
+  }
+
+  const parsed = new URL(configured);
+  const loopbackHttp = parsed.protocol === 'http:' && LOOPBACK_HOSTNAMES.has(parsed.hostname.toLowerCase());
+  if (
+    (parsed.protocol !== 'https:' && !loopbackHttp)
+    || parsed.username
+    || parsed.password
+    || parsed.pathname !== '/'
+    || parsed.search
+    || parsed.hash
+  ) {
+    throw new Error('The application URL must be an HTTPS origin without credentials, path, query, or hash.');
+  }
+  return parsed.origin;
+}
+
+export function applicationRedirectUrl(request: Request, path: ApplicationRedirectPath): URL {
+  return new URL(path, applicationOrigin(request));
+}
+
 export function requestIsSameOrigin(request: Request): boolean {
   const source = request.headers.get('origin') || request.headers.get('referer');
   if (!source) return process.env.NODE_ENV !== 'production';
   try {
-    const configuredUrl = process.env.APP_URL;
-    const expectedHost = configuredUrl ? new URL(configuredUrl).host : new URL(request.url).host;
-    return new URL(source).host === expectedHost;
+    return new URL(source).origin === applicationOrigin(request);
   } catch {
     return false;
   }

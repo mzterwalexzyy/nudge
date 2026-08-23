@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { IconLogo, IconTarget, IconInbox, IconFolder, IconMop, IconShield, IconUser, IconExternal } from '@/components/icons';
 
 const NAV = [
-  { href: '/needs-attention', label: 'Overview', Icon: IconTarget },
+  { href: '/overview', label: 'Overview', Icon: IconTarget },
   { href: '/inbox', label: 'Inbox', Icon: IconInbox },
   { href: '/organized', label: 'Organized', Icon: IconFolder },
   { href: '/sanitize', label: 'Sanitize', Icon: IconMop },
@@ -34,7 +34,7 @@ export default function Sidebar({
   return (
     <aside className="sidebar-shell">
       <nav className="sidebar" aria-label="NUDGE sections">
-        <Link href="/needs-attention" className="brand" aria-label="NUDGE dashboard">
+        <Link href="/overview" className="brand" aria-label="NUDGE dashboard">
           <IconLogo /> <span>NUDGE</span>
         </Link>
         <div className="sidebar-links">

@@ -12,7 +12,7 @@ The authenticated dashboard must follow the approved reference: persistent left 
 Save, notifications, profile, category management, and extension state must navigate or perform a real action. Production UI must not claim “Local capture” or “Extension active” without evidence.
 
 ### [PROD-003] Demo entry
-The landing page must expose a prominent Demo action. A Demo request creates an isolated temporary profile, copies the reviewed demo dataset with fresh IDs, issues a signed HttpOnly session cookie, and redirects directly to the dashboard. Demo mutations must not affect another demo or registered user.
+The landing page must expose a prominent Demo action. A Demo request creates an isolated temporary profile, copies the reviewed demo dataset with fresh IDs, issues a signed HttpOnly session cookie, and redirects to the canonical `/overview` dashboard using the configured public application origin. The legacy `/needs-attention` path redirects to `/overview`. Demo mutations must not affect another demo or registered user.
 
 ### [PROD-004] Registered account entry
 The landing page must expose Get Started. Registration requires display name, valid email, and password. Passwords are never stored in plaintext. Existing users can log in. The session is a signed JWT with a 15-minute expiration.
