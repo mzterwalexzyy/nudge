@@ -105,7 +105,7 @@ function verifyAgreementPanel() {
 }
 
 function verifyHostedConnection() {
-  const hostedOrigin = 'https://second-brain-ui09.onrender.com';
+  const hostedOrigin = 'https://second-brain-uio9.onrender.com';
   const manifest = JSON.parse(fs.readFileSync(path.join(root, 'dist', 'manifest.json'), 'utf8'));
   const popupHtml = fs.readFileSync(path.join(root, 'dist', 'popup.html'), 'utf8');
   const popupScript = fs.readFileSync(path.join(root, 'dist', 'popup.js'), 'utf8');

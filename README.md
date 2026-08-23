@@ -8,6 +8,54 @@ An AI intelligence layer for things you save and things you are about to agree t
 - `dashboard` — Next.js account/demo entry, attention-ranked feed, user categories, and confirmed cleanup UI
 - `extension` — Manifest V3 native X bookmark listener and agreement-page detector
 
+## Judge quick start
+
+**Hosted demo:** [https://second-brain-uio9.onrender.com](https://second-brain-uio9.onrender.com)
+
+The hosted app runs on Render Free, so the first request may need time to wake. Then:
+
+1. Select **Try Demo**. NUDGE creates a fresh, isolated 24-hour judge profile and opens `/overview`; no signup is required.
+2. Review the attention totals and ranked items on **Overview**, then open **Inbox**, **Organized**, **Agreements**, and **Sanitize**. Demo changes are scoped to this profile, and cleanup never runs without explicit confirmation.
+3. Use **Save** for a direct URL capture, or follow the extension walkthrough below to test native X bookmarks and agreement detection.
+
+### Test the Chrome extension
+
+The extension is intentionally pinned to the hosted NUDGE origin. Judges enter only a profile token; there is no server URL to configure.
+
+1. Install dependencies and build the unpacked extension from the repository root:
+
+   ```powershell
+   npm install
+   npm run build --workspace=@second-brain/extension
+   ```
+
+2. Open `chrome://extensions`, enable **Developer mode**, and choose **Load unpacked**. Select `extension/dist`. Disable or remove older NUDGE installations so only one build is active.
+3. In the hosted demo, open **Profile → Browser extension**, select **Generate connection token**, and copy the token. NUDGE displays the plaintext once and stores only its SHA-256 digest on the server.
+4. Open the NUDGE extension popup, paste the token, and select **Connect**.
+5. If X was already open when the extension was built or reloaded, fully refresh or reopen the X tab. Otherwise Chrome leaves the previous content-script context invalidated.
+6. Open an unbookmarked post on `x.com` and select X's native **Bookmark** control. NUDGE acts only on the ADD action; removing a bookmark is intentionally ignored.
+7. Optional verification: open the X page console and look for `[NUDGE] capture stored.` Return to NUDGE and confirm the new item in **Inbox** or the relevant dashboard collection.
+8. To test agreement analysis, visit a public terms, privacy, or agreement page. Open the quiet NUDGE badge to review the 3–5 clauses the analysis considers most important.
+
+A successful X response may report `fallback:NO readable text extracted` for an outbound link. This is not a failed bookmark: NUDGE keeps the live tweet text when the linked page is blocked, empty, or unreadable.
+
+### Judge troubleshooting
+
+| Symptom | Resolution |
+|---|---|
+| Render is slow on first load | Wait for the free service to wake, then refresh once. |
+| Extension reports HTTP 404 | Rebuild `extension/dist`, reload the unpacked extension, and refresh the X tab. Confirm the extension was loaded from this repository and that only one NUDGE installation is enabled. |
+| Console says `Extension context invalidated` | The extension was reloaded while the page remained open. Fully refresh or reopen the X tab. |
+| Extension reports HTTP 401 | The profile token is stale, expired, rotated, or was erased by a Render restart. Start a fresh demo if needed, generate a new token from **Profile**, and reconnect the popup. |
+| Bookmark click produces no new item | NUDGE captures only the native ADD action. If the post is already bookmarked, remove it and select Bookmark again. |
+| X displays source-map, SSL, CSP, or `aria-hidden` warnings | These are X/browser messages and are unrelated to NUDGE capture. Use the `[NUDGE]` console lines as the extension signal. |
+
+Render Free stores SQLite at `/tmp/nudge.sqlite`. A redeploy or instance replacement can erase demo profiles, registered accounts, generated tokens, and mutations. **Try Demo** recreates an isolated profile, after which a new extension token must be generated.
+
+## How Kiro was used
+
+NUDGE was developed with Kiro's spec-driven workflow. The active [`.kiro/specs/nudge-production.md`](.kiro/specs/nudge-production.md) specification defines production behavior and security invariants for demo isolation, profile-scoped access, authentication, extension credentials, truthful UI state, responsive UX, and deployment boundaries. Kiro was used to trace these requirements across the Next.js dashboard, SQLite intelligence pipeline, and Manifest V3 extension; implement focused remediations; and turn critical requirements into repeatable dashboard and extension verification checks before shipping.
+
 ## Local setup
 
 1. Run `npm install` from this directory.

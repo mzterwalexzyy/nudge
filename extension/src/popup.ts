@@ -1,6 +1,9 @@
+/// <reference types="chrome" />
 /** Hosted NUDGE connection settings. Tokens are stored only in extension storage. */
 
-const NUDGE_API = 'https://second-brain-ui09.onrender.com';
+export {};
+
+const NUDGE_API = 'https://second-brain-uio9.onrender.com';
 
 async function init() {
   const tokenInput = document.getElementById('token') as HTMLInputElement;

@@ -1,25 +1,24 @@
 /** Authenticated bridge from page content scripts to the hosted NUDGE API. */
 
-const API_BASE_DEFAULT = 'https://second-brain-ui09.onrender.com';
+const API_BASE_DEFAULT = 'https://second-brain-uio9.onrender.com';
 
-type Settings = { apiBase: string; captureToken: string };
+type Settings = { captureToken: string };
 
 async function getSettings(): Promise<Settings> {
-  const stored = await chrome.storage.local.get(['apiBase', 'captureToken']);
+  const stored = await chrome.storage.local.get(['captureToken']);
   return {
-    apiBase: typeof stored.apiBase === 'string' && stored.apiBase ? stored.apiBase : API_BASE_DEFAULT,
     captureToken: typeof stored.captureToken === 'string' ? stored.captureToken : '',
   };
 }
 
 async function postIngest(payload: unknown) {
-  const { apiBase, captureToken } = await getSettings();
+  const { captureToken } = await getSettings();
   if (!captureToken) {
     return { ok: false, status: 401, error: 'Open the extension and save your capture token first.' };
   }
 
   try {
-    const response = await fetch(`${apiBase}/api/ingest`, {
+    const response = await fetch(`${API_BASE_DEFAULT}/api/ingest`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
