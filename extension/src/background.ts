@@ -1,6 +1,6 @@
-/** Authenticated bridge from page content scripts to the local dashboard API. */
+/** Authenticated bridge from page content scripts to the hosted NUDGE API. */
 
-const API_BASE_DEFAULT = 'http://localhost:3005';
+const API_BASE_DEFAULT = 'https://second-brain-ui09.onrender.com';
 
 type Settings = { apiBase: string; captureToken: string };
 
@@ -61,5 +61,5 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('[NUDGE] installed. Configure the local capture token, then native X bookmark capture is ready.');
+  console.log('[NUDGE] installed. Paste a Profile connection token, then native X bookmark capture is ready.');
 });

@@ -104,9 +104,29 @@ function verifyAgreementPanel() {
   return { badgeDetected: true, renderedClauses: clauses.length };
 }
 
+function verifyHostedConnection() {
+  const hostedOrigin = 'https://second-brain-ui09.onrender.com';
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'dist', 'manifest.json'), 'utf8'));
+  const popupHtml = fs.readFileSync(path.join(root, 'dist', 'popup.html'), 'utf8');
+  const popupScript = fs.readFileSync(path.join(root, 'dist', 'popup.js'), 'utf8');
+  const backgroundScript = fs.readFileSync(path.join(root, 'dist', 'background.js'), 'utf8');
+
+  assert.ok(manifest.host_permissions.includes(`${hostedOrigin}/*`), 'manifest must permit the hosted NUDGE API');
+  assert.ok(!manifest.host_permissions.includes('http://localhost:3005/*'), 'production extension must not request localhost access');
+  assert.match(popupHtml, /id="token"/);
+  assert.doesNotMatch(popupHtml, /id="api"|Local dashboard/i, 'judges should only need to enter a token');
+  for (const bundle of [popupScript, backgroundScript]) {
+    assert.ok(bundle.includes(hostedOrigin), 'connection bundles must use the hosted NUDGE origin');
+    assert.ok(!bundle.includes('http://localhost:3005'), 'connection bundles must not default to localhost');
+  }
+
+  return { hostedOrigin, tokenOnlyPopup: true };
+}
+
 const evidence = {
+  hostedConnection: verifyHostedConnection(),
   nativeBookmark: verifyNativeBookmarkListener(),
   agreement: verifyAgreementPanel(),
 };
 console.log(JSON.stringify(evidence, null, 2));
-console.log('PASS: built extension listener and agreement-panel contracts hold.');
+console.log('PASS: built extension listener, agreement-panel, and hosted-connection contracts hold.');

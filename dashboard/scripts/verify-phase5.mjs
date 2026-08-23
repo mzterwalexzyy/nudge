@@ -145,6 +145,34 @@ try {
   assert.equal(crossProfileRelations, 0, 'demo relationships must stay inside their profile');
   check.close();
 
+  const demoProfileBefore = await fetch(`${base}/profile`, { headers: { cookie: demoACookie } });
+  const demoProfileBeforeHtml = await demoProfileBefore.text();
+  assert.equal(demoProfileBefore.status, 200, 'temporary demo profiles must render Profile');
+  assert.match(demoProfileBeforeHtml, /Generate connection token/);
+  assert.doesNotMatch(demoProfileBeforeHtml, /Extension pairing is unavailable/i);
+
+  const credentialResponse = await fetch(`${base}/api/profile/capture-token`, {
+    method: 'POST',
+    headers: { origin: base, cookie: demoACookie },
+  });
+  const credentialText = await credentialResponse.text();
+  assert.equal(credentialResponse.status, 200, credentialText);
+  const credential = JSON.parse(credentialText);
+  assert.equal(credential.ok, true);
+  assert.match(credential.token, /^[0-9a-f]{64}$/, 'capture token must contain 256 bits of random data');
+
+  const { createHash } = await import('node:crypto');
+  const expectedDigest = createHash('sha256').update(credential.token).digest('hex');
+  check = new Database(dbPath);
+  const demoCredentialRows = check.prepare(`SELECT capture_token_hash FROM users
+    WHERE account_type = 'demo' AND capture_token_hash IS NOT NULL`).all();
+  assert.equal(demoCredentialRows.length, 1, 'only the requesting demo profile receives a credential');
+  assert.equal(demoCredentialRows[0].capture_token_hash, expectedDigest, 'the server must persist only the token digest');
+  check.close();
+
+  const demoProfileAfterHtml = await (await fetch(`${base}/profile`, { headers: { cookie: demoACookie } })).text();
+  assert.doesNotMatch(demoProfileAfterHtml, new RegExp(credential.token), 'plaintext credentials must not persist in Profile markup');
+
   assert.equal((await fetch(`${base}/overview`, { headers: { cookie: demoACookie } })).status, 200);
   assert.equal((await fetch(`${base}/overview`, { headers: { cookie: demoBCookie } })).status, 200);
 

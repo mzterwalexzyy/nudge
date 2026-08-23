@@ -7,7 +7,7 @@
   "host_permissions": [
     "https://x.com/*",
     "https://twitter.com/*",
-    "http://localhost:3005/*"
+    "https://second-brain-ui09.onrender.com/*"
   ],
   "icons": {
     "16": "icons/nudge-16.png",

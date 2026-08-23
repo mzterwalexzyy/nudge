@@ -35,7 +35,7 @@ Passwords use bcrypt with a work factor of at least 12. JWTs use an environment-
 After five failed login attempts for one IP/email window within one minute, login returns HTTP 429 until the window expires.
 
 ### [SEC-PROD-005] Public mutation boundaries — HIGH
-Same-origin dashboard mutations require a valid session. Extension capture credentials resolve to one profile and are never exposed in page markup or logs.
+Same-origin dashboard mutations require a valid session. Registered and temporary demo profiles can generate or rotate a profile-scoped extension credential from Profile; plaintext is returned only in that authenticated generation response and kept in extension-local storage, while the server persists only its digest. Rotation invalidates the prior credential, expired demo credentials are rejected, and the extension may send credentials only to the fixed hosted NUDGE origin.
 
 ## UX and motion
 

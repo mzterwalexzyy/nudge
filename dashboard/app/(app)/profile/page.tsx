@@ -19,7 +19,7 @@ export default function ProfilePage() {
         </section>
         <section className="profile-card profile-card-stack" id="extension">
           <div><h2>Browser extension</h2><p>{user.extension_last_seen_at ? `Last connected ${user.extension_last_seen_at}` : 'Connect the NUDGE extension to save directly from supported pages.'}</p></div>
-          <ExtensionConnect disabled={user.account_type === 'demo'} />
+          <ExtensionConnect />
         </section>
         {user.account_type === 'demo' && (
           <section className="profile-card profile-card-stack"><div><h2>Temporary Demo</h2><p>This isolated profile expires automatically. Changes never affect another judge or registered user.</p></div></section>
