@@ -785,3 +785,63 @@ h1.page-title { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
 .landing-brand-mark .brand-logo { width: 32px; height: 32px; }
 .production-shell .brand .brand-logo { width: 30px; height: 30px; }
 .auth-brand .brand-logo { width: 25px; height: 25px; }
+
+/* ---------- Notifications and pagination ---------- */
+.dashboard-header-spacer { min-width: 0; flex: 1; }
+.dashboard-actions { margin-left: auto; }
+.notification-menu-wrap { position: relative; }
+.notification-menu {
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(520px, calc(100vh - 130px));
+  position: absolute;
+  top: calc(100% + 11px);
+  right: 0;
+  z-index: 55;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 20px 54px rgba(16,24,40,.17);
+  transform-origin: top right;
+  animation: menu-in .16s ease-out both;
+}
+.notification-menu::before { content: ''; width: 12px; height: 12px; position: absolute; top: -7px; right: 13px; border-top: 1px solid var(--border); border-left: 1px solid var(--border); background: #fff; transform: rotate(45deg); }
+.notification-menu-head { padding: 14px 15px 11px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); }
+.notification-menu-head > div { min-width: 0; display: grid; gap: 2px; }
+.notification-menu-head strong { font-size: 13.5px; }
+.notification-menu-head small { color: var(--text-faint); font-size: 10.5px; }
+.notification-menu-head > span { min-width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; color: var(--accent-ink); background: var(--green-bg); font-size: 10px; font-weight: 800; }
+.notification-menu-list { min-height: 0; overflow-y: auto; }
+.notification-item { padding: 11px 14px; display: flex; align-items: flex-start; gap: 10px; border-bottom: 1px solid var(--border); transition: background .14s ease; }
+.notification-item:hover { background: var(--bg); }
+.notification-dot { width: 9px; height: 9px; margin-top: 5px; flex: 0 0 9px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 3px var(--blue-bg); }
+.notification-dot.agreement { background: var(--yellow); box-shadow: 0 0 0 3px var(--yellow-bg); }
+.notification-copy { min-width: 0; display: grid; gap: 4px; }
+.notification-copy strong { overflow: hidden; color: var(--text); font-size: 12.5px; line-height: 1.35; font-weight: 680; text-overflow: ellipsis; white-space: nowrap; }
+.notification-copy small { color: var(--text-faint); font-size: 10.5px; }
+.notification-empty { padding: 28px 20px; color: var(--text-dim); font-size: 12px; line-height: 1.5; text-align: center; }
+.notification-view-all { padding: 11px 14px; color: var(--accent-ink); background: #fbfefd; font-size: 11.5px; font-weight: 750; text-align: center; }
+.notification-view-all:hover { background: var(--green-bg); }
+.pagination { padding: 13px 16px 15px; display: flex; align-items: center; justify-content: center; gap: 14px; border-top: 1px solid var(--border); }
+.pagination-link { min-width: 74px; min-height: 32px; padding: 7px 11px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border-strong); border-radius: 8px; color: var(--text-dim); background: #fff; font-size: 11.5px; font-weight: 700; transition: border-color .14s ease, color .14s ease, background .14s ease; }
+.pagination-link:hover { border-color: rgba(20,184,166,.45); color: var(--accent-ink); background: var(--green-bg); }
+.pagination-link.disabled { cursor: default; opacity: .42; }
+.pagination-link.disabled:hover { border-color: var(--border-strong); color: var(--text-dim); background: #fff; }
+.pagination-status { color: var(--text-faint); font-size: 11px; white-space: nowrap; }
+
+@media (max-width: 680px) {
+  .notification-menu { width: calc(100vw - 32px); max-height: calc(100vh - 160px); top: calc(100% + 10px); right: -44px; }
+  .notification-menu::before { display: none; }
+}
+
+@media (max-width: 430px) {
+  .pagination { gap: 8px; }
+  .pagination-link { min-width: 66px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-menu { animation: none !important; }
+  .notification-item, .pagination-link { transition: none !important; }
+}

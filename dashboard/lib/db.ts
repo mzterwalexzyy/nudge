@@ -188,6 +188,25 @@ function attentionDateWindow(now: Date) {
   };
 }
 
+export type ItemPage = {
+  items: Item[];
+  totalItems: number;
+  page: number;
+  totalPages: number;
+  pageSize: number;
+};
+
+function pageWindow(totalItems: number, requestedPage: number, requestedPageSize: number) {
+  const pageSize = Number.isInteger(requestedPageSize) && requestedPageSize > 0
+    ? Math.min(requestedPageSize, 100)
+    : 10;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const page = Number.isInteger(requestedPage) && requestedPage > 0
+    ? Math.min(requestedPage, totalPages)
+    : 1;
+  return { page, totalPages, pageSize, offset: (page - 1) * pageSize };
+}
+
 export function needsAttention(now: Date = new Date()): Item[] {
   const { today, cutoff } = attentionDateWindow(now);
   return db()
@@ -207,8 +226,44 @@ export function needsAttention(now: Date = new Date()): Item[] {
           WHEN action_required = 1 OR attention IN ('review','important','high') THEN 2
           ELSE 3
         END,
-        (deadline IS NULL), deadline ASC, created_at DESC`)
+        (deadline IS NULL), deadline ASC, created_at DESC, id DESC`)
     .all(currentAccountId(), today, today, cutoff, today, today, cutoff) as Item[];
+}
+
+export function needsAttentionPage(requestedPage = 1, requestedPageSize = 3, now: Date = new Date()): ItemPage {
+  const database = db();
+  const account = currentAccountId();
+  const { today, cutoff } = attentionDateWindow(now);
+  const totalItems = (database.prepare(`SELECT COUNT(*) AS n FROM items
+    WHERE user_id = ?
+      AND ${ACTIVE_ATTENTION_FILTER}
+      AND (
+        deadline < ?
+        OR deadline BETWEEN ? AND ?
+        OR attention IN ('review','important','high')
+        OR action_required = 1
+      )`).get(account, today, today, cutoff) as { n: number }).n;
+  const pagination = pageWindow(totalItems, requestedPage, requestedPageSize);
+  const items = database.prepare(`SELECT * FROM items
+    WHERE user_id = ?
+      AND ${ACTIVE_ATTENTION_FILTER}
+      AND (
+        deadline < ?
+        OR deadline BETWEEN ? AND ?
+        OR attention IN ('review','important','high')
+        OR action_required = 1
+      )
+    ORDER BY
+      CASE
+        WHEN deadline < ? THEN 0
+        WHEN deadline BETWEEN ? AND ? THEN 1
+        WHEN action_required = 1 OR attention IN ('review','important','high') THEN 2
+        ELSE 3
+      END,
+      (deadline IS NULL), deadline ASC, created_at DESC, id DESC
+    LIMIT ? OFFSET ?`)
+    .all(account, today, today, cutoff, today, today, cutoff, pagination.pageSize, pagination.offset) as Item[];
+  return { items, totalItems, page: pagination.page, totalPages: pagination.totalPages, pageSize: pagination.pageSize };
 }
 
 export function getChildren(parentId: string): Item[] {
@@ -248,8 +303,22 @@ export function collections(): Array<Item & { child_count: number }> {
 
 export function inbox(): Item[] {
   return db()
-    .prepare("SELECT * FROM items WHERE user_id = ? AND status = 'inbox' ORDER BY created_at DESC")
+    .prepare("SELECT * FROM items WHERE user_id = ? AND status = 'inbox' ORDER BY created_at DESC, id DESC")
     .all(currentAccountId()) as Item[];
+}
+
+export function inboxPage(requestedPage = 1, requestedPageSize = 10): ItemPage {
+  const database = db();
+  const account = currentAccountId();
+  const totalItems = (database.prepare("SELECT COUNT(*) AS n FROM items WHERE user_id = ? AND status = 'inbox'")
+    .get(account) as { n: number }).n;
+  const pagination = pageWindow(totalItems, requestedPage, requestedPageSize);
+  const items = database.prepare(`SELECT * FROM items
+    WHERE user_id = ? AND status = 'inbox'
+    ORDER BY created_at DESC, id DESC
+    LIMIT ? OFFSET ?`)
+    .all(account, pagination.pageSize, pagination.offset) as Item[];
+  return { items, totalItems, page: pagination.page, totalPages: pagination.totalPages, pageSize: pagination.pageSize };
 }
 
 export type OrganizedCategory = {
@@ -441,6 +510,17 @@ export function applyCleanup(ids: string[], action: 'expire' | 'stale' | 'delete
   return { updated: affected, action };
 }
 
+export function recentNotifications(limit = 5): Item[] {
+  return db()
+    .prepare(`SELECT * FROM items
+      WHERE user_id = ?
+        AND status = 'inbox'
+        AND (source IN ('x_bookmark', 'bookmark_backfill') OR kind = 'agreement')
+      ORDER BY created_at DESC, id DESC
+      LIMIT ?`)
+    .all(currentAccountId(), Math.max(0, Math.min(Math.trunc(limit), 20))) as Item[];
+}
+
 export function recentlySaved(limit = 4): Item[] {
   return db()
     .prepare("SELECT * FROM items WHERE user_id = ? AND (kind IS NULL OR kind != 'collection') ORDER BY created_at DESC LIMIT ?")
@@ -470,8 +550,22 @@ export function dashboardStats(now: Date = new Date()) {
 
 export function agreements(): Item[] {
   return db()
-    .prepare("SELECT * FROM items WHERE user_id = ? AND kind = 'agreement' ORDER BY created_at DESC")
+    .prepare("SELECT * FROM items WHERE user_id = ? AND kind = 'agreement' ORDER BY created_at DESC, id DESC")
     .all(currentAccountId()) as Item[];
+}
+
+export function agreementsPage(requestedPage = 1, requestedPageSize = 10): ItemPage {
+  const database = db();
+  const account = currentAccountId();
+  const totalItems = (database.prepare("SELECT COUNT(*) AS n FROM items WHERE user_id = ? AND kind = 'agreement'")
+    .get(account) as { n: number }).n;
+  const pagination = pageWindow(totalItems, requestedPage, requestedPageSize);
+  const items = database.prepare(`SELECT * FROM items
+    WHERE user_id = ? AND kind = 'agreement'
+    ORDER BY created_at DESC, id DESC
+    LIMIT ? OFFSET ?`)
+    .all(account, pagination.pageSize, pagination.offset) as Item[];
+  return { items, totalItems, page: pagination.page, totalPages: pagination.totalPages, pageSize: pagination.pageSize };
 }
 
 export function kindCounts(): Record<string, number> {

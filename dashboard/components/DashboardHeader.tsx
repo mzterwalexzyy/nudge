@@ -1,33 +1,74 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { IconBell, IconPlus, IconUser } from '@/components/icons';
+
+export type HeaderNotification = {
+  id: string;
+  title: string | null;
+  url: string;
+  kind: string | null;
+  source: string;
+  timeLabel: string;
+};
 
 function initials(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
 }
 
+function notificationType(notification: HeaderNotification) {
+  return notification.kind === 'agreement' || notification.source === 'agreement'
+    ? 'Agreement ready to review'
+    : 'Bookmark captured';
+}
+
 export default function DashboardHeader({
   name,
-  notificationCount,
+  notifications,
   accountType,
 }: {
   name: string;
-  notificationCount: number;
+  notifications: HeaderNotification[];
   accountType: 'user' | 'demo' | 'development';
 }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const notificationWrap = useRef<HTMLDivElement>(null);
+  const notificationButton = useRef<HTMLButtonElement>(null);
   const [greeting, setGreeting] = useState('Welcome');
   const [saveOpen, setSaveOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [url, setUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const isOverview = pathname === '/overview';
 
   useEffect(() => {
     const hour = new Date().getHours();
     setGreeting(hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening');
   }, []);
+
+  useEffect(() => {
+    if (!notificationsOpen) return;
+    function closeOnOutsidePress(event: PointerEvent) {
+      if (!notificationWrap.current?.contains(event.target as Node)) setNotificationsOpen(false);
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setNotificationsOpen(false);
+        notificationButton.current?.focus();
+      }
+    }
+    document.addEventListener('pointerdown', closeOnOutsidePress);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePress);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [notificationsOpen]);
 
   async function save(event: FormEvent) {
     event.preventDefault();
@@ -53,20 +94,66 @@ export default function DashboardHeader({
   return (
     <>
       <header className="dashboard-header">
-        <div className="dashboard-greeting">
-          <h1>{greeting}, {name} <span aria-hidden="true">👋</span></h1>
-          <p>Here&apos;s what matters most right now.</p>
-        </div>
+        {isOverview ? (
+          <div className="dashboard-greeting">
+            <h1>{greeting}, {name} <span aria-hidden="true">👋</span></h1>
+            <p>Here&apos;s what matters most right now.</p>
+          </div>
+        ) : (
+          <div className="dashboard-header-spacer" aria-hidden="true" />
+        )}
         <div className="dashboard-actions">
-          <button className="dashboard-save" type="button" onClick={() => setSaveOpen(true)}>
+          <button className="dashboard-save" type="button" onClick={() => { setSaveOpen(true); setNotificationsOpen(false); setProfileOpen(false); }}>
             <IconPlus size={17} /> Save
           </button>
-          <Link className="dashboard-icon-button" href="/overview" aria-label={`${notificationCount} items need attention`}>
-            <IconBell size={18} />
-            {notificationCount > 0 && <span>{Math.min(notificationCount, 99)}</span>}
-          </Link>
+          <div className="notification-menu-wrap" ref={notificationWrap}>
+            <button
+              className="dashboard-icon-button"
+              type="button"
+              ref={notificationButton}
+              onClick={() => {
+                const opening = !notificationsOpen;
+                setNotificationsOpen(opening);
+                setProfileOpen(false);
+                if (opening) router.refresh();
+              }}
+              aria-label={`${notifications.length} recent notifications`}
+              aria-expanded={notificationsOpen}
+              aria-controls="notification-menu"
+            >
+              <IconBell size={18} />
+              {notifications.length > 0 && <span>{notifications.length}</span>}
+            </button>
+            {notificationsOpen && (
+              <section className="notification-menu" id="notification-menu" aria-label="Recent notifications">
+                <div className="notification-menu-head">
+                  <div><strong>Notifications</strong><small>Recent captures and reviews</small></div>
+                  <span>{notifications.length}</span>
+                </div>
+                <div className="notification-menu-list">
+                  {notifications.length === 0 ? (
+                    <div className="notification-empty">New bookmarks and agreement reviews will appear here.</div>
+                  ) : notifications.map((notification) => (
+                    <Link
+                      key={notification.id}
+                      href={`/items/${notification.id}`}
+                      className="notification-item"
+                      onClick={() => setNotificationsOpen(false)}
+                    >
+                      <span className={`notification-dot ${notification.kind === 'agreement' ? 'agreement' : 'bookmark'}`} aria-hidden="true" />
+                      <span className="notification-copy">
+                        <strong>{notification.title || notification.url}</strong>
+                        <small>{notificationType(notification)}{notification.timeLabel ? ` · ${notification.timeLabel}` : ''}</small>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+                <Link className="notification-view-all" href="/inbox" onClick={() => setNotificationsOpen(false)}>View all in Inbox</Link>
+              </section>
+            )}
+          </div>
           <div className="profile-menu-wrap">
-            <button className="dashboard-avatar" type="button" onClick={() => setProfileOpen((value) => !value)} aria-expanded={profileOpen} aria-label="Open profile menu">
+            <button className="dashboard-avatar" type="button" onClick={() => { setProfileOpen((value) => !value); setNotificationsOpen(false); }} aria-expanded={profileOpen} aria-label="Open profile menu">
               {initials(name) || <IconUser size={17} />}
             </button>
             {profileOpen && (

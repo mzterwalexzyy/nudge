@@ -34,7 +34,7 @@ export default function Sidebar({
   return (
     <aside className="sidebar-shell">
       <nav className="sidebar" aria-label="NUDGE sections">
-        <Link href="/overview" className="brand" aria-label="NUDGE dashboard">
+        <Link href="/" className="brand" aria-label="NUDGE landing page">
           <IconLogo /> <span>NUDGE</span>
         </Link>
         <div className="sidebar-links">

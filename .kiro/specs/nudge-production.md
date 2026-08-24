@@ -6,10 +6,10 @@
 ## Functional requirements
 
 ### [PROD-001] Definitive dashboard shell
-The authenticated dashboard must follow the approved reference: persistent left navigation, browser-local time greeting with profile name, top-right Save/notification/avatar controls, bottom-left Profile and browser-extension status, four attention statistics, ranked attention rows, and compact recently-saved cards. Layout must remain usable on tablet and mobile.
+The authenticated dashboard must follow the approved reference: persistent left navigation whose NUDGE brand returns to the public landing page, browser-local time greeting with profile name on Overview only, top-right Save/notification/avatar controls, bottom-left Profile and browser-extension status, four attention statistics, ranked attention rows, and compact recently-saved cards. Layout must remain usable on tablet and mobile.
 
 ### [PROD-002] Truthful controls
-Save, notifications, profile, category management, and extension state must navigate or perform a real action. Production UI must not claim “Local capture” or “Extension active” without evidence.
+Save, notifications, profile, category management, and extension state must navigate or perform a real action. The notification control opens an accessible, responsive menu containing at most five recent profile-scoped X bookmarks or agreement reviews and a View all action leading to Inbox. Production UI must not claim “Local capture,” “Extension active,” or demo unavailability without evidence.
 
 ### [PROD-003] Demo entry
 The landing page must expose a prominent Demo action. A Demo request creates an isolated temporary profile, copies the reviewed demo dataset with fresh IDs, issues a signed HttpOnly session cookie, and redirects to the canonical `/overview` dashboard using the configured public application origin. The legacy `/needs-attention` path redirects to `/overview`. Demo mutations must not affect another demo or registered user.
@@ -18,7 +18,7 @@ The landing page must expose a prominent Demo action. A Demo request creates an 
 The landing page must expose Get Started. Registration requires display name, valid email, and password. Passwords are never stored in plaintext. Existing users can log in. The session is a signed JWT with a 15-minute expiration.
 
 ### [PROD-005] Existing intelligence behavior
-The production shell must preserve five-day approaching-deadline rules, action/review visibility, internal intelligence details, useful links, AI-default categories, user category renaming, and item movement without altering the original AI classification.
+The production shell must preserve five-day approaching-deadline rules, action/review visibility, internal intelligence details, useful links, AI-default categories, user category renaming, and item movement without altering the original AI classification. The Overview attention feed displays three items per URL-driven page; Inbox and Agreements display ten items per page, with functional Previous and Next navigation when additional results exist.
 
 ## Security invariants
 

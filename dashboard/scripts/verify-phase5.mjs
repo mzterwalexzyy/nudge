@@ -150,6 +150,7 @@ try {
   assert.equal(demoProfileBefore.status, 200, 'temporary demo profiles must render Profile');
   assert.match(demoProfileBeforeHtml, /Generate connection token/);
   assert.doesNotMatch(demoProfileBeforeHtml, /Extension pairing is unavailable/i);
+  assert.doesNotMatch(demoProfileBeforeHtml, /Unavailable in demo/i);
 
   const credentialResponse = await fetch(`${base}/api/profile/capture-token`, {
     method: 'POST',
@@ -201,6 +202,61 @@ try {
   const user = check.prepare('SELECT id, password_hash FROM users WHERE email = ?').get(email);
   assert.ok(user?.password_hash?.startsWith('$2'), 'registered password must be a bcrypt hash');
   check.prepare('UPDATE items SET user_id = ? WHERE user_id = ?').run(user.id, account);
+
+  const uiInsert = check.prepare(`INSERT INTO items
+    (id, url, title, raw_text, source, kind, summary, deadline, date_confidence,
+      action_required, attention, status, created_at, last_seen_at, user_id, clauses)
+    VALUES
+    (@id, @url, @title, 'UI pagination contract fixture.', @source, @kind, 'UI pagination contract fixture.',
+      @deadline, @date_confidence, 0, @attention, 'inbox', @created_at, @created_at, @user_id, @clauses)`);
+  for (let index = 1; index <= 12; index += 1) {
+    const suffix = String(index).padStart(2, '0');
+    uiInsert.run({
+      id: `ui-inbox-${suffix}`,
+      url: `https://example.com/ui-inbox-${suffix}`,
+      title: `[UI] Inbox item ${suffix}`,
+      source: 'x_bookmark',
+      kind: 'article',
+      deadline: null,
+      date_confidence: 'none',
+      attention: 'low',
+      created_at: `2033-01-${suffix} 00:00:00`,
+      user_id: user.id,
+      clauses: null,
+    });
+  }
+  for (let index = 1; index <= 11; index += 1) {
+    const suffix = String(index).padStart(2, '0');
+    uiInsert.run({
+      id: `ui-agreement-${suffix}`,
+      url: `https://example.com/ui-agreement-${suffix}`,
+      title: `[UI] Agreement item ${suffix}`,
+      source: 'agreement',
+      kind: 'agreement',
+      deadline: null,
+      date_confidence: 'none',
+      attention: 'low',
+      created_at: `2032-01-${suffix} 00:00:00`,
+      user_id: user.id,
+      clauses: '[]',
+    });
+  }
+  for (let index = 1; index <= 4; index += 1) {
+    const suffix = String(index).padStart(2, '0');
+    uiInsert.run({
+      id: `ui-attention-${suffix}`,
+      url: `https://example.com/ui-attention-${suffix}`,
+      title: `[UI] Attention item ${suffix}`,
+      source: 'paste',
+      kind: 'article',
+      deadline: `2000-01-${suffix}`,
+      date_confidence: 'explicit',
+      attention: 'low',
+      created_at: `2030-01-${suffix} 00:00:00`,
+      user_id: user.id,
+      clauses: null,
+    });
+  }
   check.close();
 
   const routes = ['/', '/overview', '/inbox', '/organized', '/sanitize', '/agreements', '/profile'];
@@ -211,9 +267,34 @@ try {
     assert.equal(response.status, 200, `${route} must render`);
   }
 
-  const attentionHtml = await (await fetch(`${base}/overview`, { headers: { cookie: userCookie } })).text();
-  assert.match(attentionHtml, /\[TEST\] Needs review item/);
-  assert.match(attentionHtml, /\[TEST\] Approaching deadline/);
+  const attentionPage1Html = await (await fetch(`${base}/overview`, { headers: { cookie: userCookie } })).text();
+  const attentionPage2Html = await (await fetch(`${base}/overview?page=2`, { headers: { cookie: userCookie } })).text();
+  assert.match(attentionPage1Html, /\[UI\] Attention item 01/);
+  assert.doesNotMatch(attentionPage1Html, /\[UI\] Attention item 04/);
+  assert.match(attentionPage2Html, /\[UI\] Attention item 04/);
+  assert.match(attentionPage2Html, /\[TEST\] Needs review item/);
+  assert.match(attentionPage2Html, /\[TEST\] Approaching deadline/);
+  assert.match(attentionPage1Html, /href="\/overview\?page=2"/);
+  assert.match(attentionPage1Html, /aria-label="NUDGE landing page"/);
+  assert.match(attentionPage1Html, /what matters most right now/);
+  assert.match(attentionPage1Html, /aria-label="5 recent notifications"/);
+
+  const inboxPage1Html = await (await fetch(`${base}/inbox`, { headers: { cookie: userCookie } })).text();
+  const inboxPage2Html = await (await fetch(`${base}/inbox?page=2`, { headers: { cookie: userCookie } })).text();
+  assert.match(inboxPage1Html, /\[UI\] Inbox item 12/);
+  assert.doesNotMatch(inboxPage1Html, /\[UI\] Inbox item 02/);
+  assert.match(inboxPage2Html, /\[UI\] Inbox item 02/);
+  assert.doesNotMatch(inboxPage1Html, /what matters most right now/);
+
+  const agreementPage1Html = await (await fetch(`${base}/agreements`, { headers: { cookie: userCookie } })).text();
+  const agreementPage2Html = await (await fetch(`${base}/agreements?page=2`, { headers: { cookie: userCookie } })).text();
+  assert.match(agreementPage1Html, /\[UI\] Agreement item 11/);
+  assert.doesNotMatch(agreementPage1Html, /\[UI\] Agreement item 01/);
+  assert.match(agreementPage2Html, /\[UI\] Agreement item 01/);
+
+  check = new Database(dbPath);
+  check.prepare("DELETE FROM items WHERE user_id = ? AND id LIKE 'ui-%'").run(user.id);
+  check.close();
 
   const sanitizeHtml = await (await fetch(`${base}/sanitize`, { headers: { cookie: userCookie } })).text();
   assert.match(sanitizeHtml, /Import \(Premium\)/);

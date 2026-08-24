@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { agreements } from '@/lib/db';
+import { agreementsPage } from '@/lib/db';
 import type { Item } from '@/lib/db';
 import TopBar from '@/components/TopBar';
+import Pagination, { pageFromSearchParam, type PageSearchParams } from '@/components/Pagination';
 import { KindIcon } from '@/components/kind';
 import { parseClauses } from '@/lib/ui';
 
@@ -11,9 +12,18 @@ const LEVEL_COLOR: Record<string, string> = {
   high: 'var(--red)', important: 'var(--orange)', review: 'var(--yellow)', low: 'var(--green)',
 };
 
-export default function AgreementsPage() {
-  let items: Item[] = [];
-  try { items = agreements(); } catch { /* empty */ }
+export default function AgreementsPage({ searchParams }: { searchParams?: PageSearchParams }) {
+  let pageItems: Item[] = [];
+  let itemCount = 0;
+  let page = 1;
+  let totalPages = 1;
+  try {
+    const result = agreementsPage(pageFromSearchParam(searchParams?.page), 10);
+    pageItems = result.items;
+    itemCount = result.totalItems;
+    page = result.page;
+    totalPages = result.totalPages;
+  } catch { /* empty */ }
 
   return (
     <>
@@ -22,10 +32,10 @@ export default function AgreementsPage() {
         Terms, privacy, and subscription pages you saved — with the clauses that actually matter.
       </p>
 
-      {items.length === 0 ? (
+      {itemCount === 0 ? (
         <div className="empty">No agreements analyzed yet. Visit a Terms page with the extension to see what matters.</div>
       ) : (
-        items.map((it) => {
+        pageItems.map((it) => {
           const clauses = parseClauses(it);
           return (
             <div key={it.id} className="panel">
@@ -59,6 +69,7 @@ export default function AgreementsPage() {
           );
         })
       )}
+      <Pagination basePath="/agreements" page={page} totalPages={totalPages} label="Agreement pages" />
     </>
   );
 }
